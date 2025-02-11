@@ -3,12 +3,14 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 using System.Diagnostics;
 using System;
+using Debug = System.Diagnostics.Debug;
 
 public class AutoGitPush : MonoBehaviour
 {
     [PostProcessBuild(1)]
     public static void OnPostProcessBuild(BuildTarget target, string pathToBuiltProject)
     {
+        UnityEngine.Debug.Log("尝试请求");
         PushToGit();
     }
 
@@ -24,10 +26,15 @@ public class AutoGitPush : MonoBehaviour
 
         ExecuteCommand(gitAddCommand);
         ExecuteCommand(gitCommitCommand);
-        ExecuteCommand(gitPushCommand);
+        if (ExecuteCommand(gitPushCommand))  // Check if push was successful
+        {
+            UnityEngine.Debug.Log("Git push successful!"); // Output success message
+        }
+        
+
     }
 
-    private static void ExecuteCommand(string command)
+    private static bool ExecuteCommand(string command) // Return bool for success
     {
         ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe", "/c " + command)
         {
@@ -47,12 +54,14 @@ public class AutoGitPush : MonoBehaviour
         if (string.IsNullOrEmpty(error))
         {
             UnityEngine.Debug.Log("Command Output: " + output);
+            process.Close();
+            return true; // Command executed successfully
         }
         else
         {
             UnityEngine.Debug.LogError("Command Error: " + error);
+            process.Close();
+            return false; // Command failed
         }
-
-        process.Close();
     }
 }
